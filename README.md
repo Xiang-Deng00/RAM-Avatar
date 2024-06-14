@@ -16,4 +16,53 @@ Xiang Deng<sup>1</sup>, [Zerong Zheng](https://zhengzerong.github.io/)<sup>2</su
 <img src="https://github.com/Xiang-Deng00/RAM-Avatar/blob/main/pipeline.png">
 
 
+## Requirements
+- python 3.9.17
+- pytorch 2.0.0+cu118
+- torchvision 0.15.1+cu118
+- setuptools 68.0.0
+- scikit-image 0.22.0
+- numpy 1.25.2
 
+## Datasets
+
+
+1. Fit the Smpl-X parameters using ProxyCapV2. 
+2. Fit the Faceverse parameters using Faceverse.
+3. Render smpl and face maps using pytorch3d.
+4. Construct the data directory as following.
+
+dataset/train:
+
+    |dataset/train
+       |——keypoints_mmpose_hand
+          |——00000001.json
+          |——00000002.json
+          |——...
+       |——smpl_map
+          |——00000001.png
+          |——00000002.png
+          |——...
+       |——smpl_map_001
+          |——00000001.png
+          |——00000002.png
+          |——...
+       |——track2
+          |——00000001.png
+          |——00000002.png
+          |——...
+        |——00000001.png
+        |——00000002.png
+        |——...
+
+## Train
+```
+CUDA_VISIBLE_DEVICES=0,1,2,3 python main_train.py --from_json configs/train.json --name train --nump 4
+```
+
+## Test
+```
+CUDA_VISIBLE_DEVICES=0,1,2,3 python main_test.py --from_json configs/test.json --name train --nump 4
+```
+## Acknowledgement 
+This code is built upon [Styleavatar](https://github.com/LizhenWangT/StyleAvatar) and [CCNet](https://github.com/speedinghzl/CCNet). Thanks to the authors of these open source codes. 
