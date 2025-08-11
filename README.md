@@ -1,68 +1,152 @@
 <div align="center">
 
-# <b>RAM-Avatar: Real-time Photo-Realistic Avatar from Monocular Videos </b>with Full-body Control
-Xiang Deng<sup>1</sup>, [Zerong Zheng](https://zhengzerong.github.io/)<sup>2</sup>, [Yuxiang Zhang](https://zhangyux15.github.io/)<sup>1</sup>, [Jingxiang Sun](https://mrtornado24.github.io/)<sup>1</sup>, Chao Xu<sup>2</sup>, XiaoDong Yang<sup>3</sup>, [Lizhen Wang](https://lizhenwangt.github.io/)<sup>1</sup>, [Yebin Liu](https://www.liuyebin.com)<sup>1</sup>
+# **RAM-Avatar: Real-Time Photo-Realistic Full-Body Avatar from Monocular Video**  
+*(CVPR 2024)*
 
+**Xiang Deng<sup>1</sup>**, [Zerong Zheng](https://zhengzerong.github.io/)<sup>2</sup>,  
+[Yuxiang Zhang](https://zhangyux15.github.io/)<sup>1</sup>, [Jingxiang Sun](https://mrtornado24.github.io/)<sup>1</sup>,  
+Chao Xu<sup>2</sup>, XiaoDong Yang<sup>3</sup>, [Lizhen Wang](https://lizhenwangt.github.io/)<sup>1</sup>, [Yebin Liu](https://www.liuyebin.com)<sup>1</sup>
 
-<sup>1</sup>Tsinghua Univserity  <sup>2</sup>NNKosmos Technology  <sup>3</sup>Li Auto
+<sup>1</sup>Tsinghua University <sup>2</sup>NNKosmos Technology <sup>3</sup>Li Auto
 
-###  [Paper (Early access)](https://cloud.tsinghua.edu.cn/f/6b7a88c3b4ac43b0b506/?dl=1) · [Video]
+---
+
+📄 [Paper](https://openaccess.thecvf.com/content/CVPR2024/papers/Deng_RAM-Avatar_Real-time_Photo-Realistic_Avatar_from_Monocular_Videos_with_Full-body_Control_CVPR_2024_paper.pdf) &nbsp;|&nbsp; 🎥 [Video Demo] &nbsp;|&nbsp; 
 
 </div>
-<img src="https://github.com/Xiang-Deng00/RAM-Avatar/blob/main/sample_results.png">
 
-***Abstract**: This paper focuses on advancing the applicability of human avatar learning methods by proposing RAM-Avatar, which learns Real-time, photo-realistic Avatar supports full-body control from Monocular videos. To achieve this goal, RAM-Avatar leverages two statistical templates responsible for modeling the facial expression and hand gesture variations, while a sparsely computed dual attention module is introduced upon another body template to facilitate high-fidelity texture rendering for the torsos and limbs. Building on this foundation, we deploy a lightweight yet powerful StyleUnet along with a temporal-aware discriminator to achieve real-time realistic rendering. To enable robust animation for out-of-distribution poses, we propose a Motion Distribution Align module to compensate for the discrepancies between the training and testing motion distribution.Results and extensive experiments conducted in various experimental settings demonstrate the superiority of our proposed method, and a real-time live system is proposed to further push research into applications. The training and testing code will be released for research purposes.*
+---
 
-<img src="https://github.com/Xiang-Deng00/RAM-Avatar/blob/main/pipeline.png">
+## 🌟 Overview
 
+We present **RAM-Avatar**, a novel approach for learning **real-time, photo-realistic full-body avatars** from monocular videos. Our method enables **full-body control** with high-fidelity rendering of facial expressions, hand gestures, and body textures — all while maintaining real-time performance.
 
-## Requirements
-- python 3.9.17
-- pytorch 2.0.0+cu118
-- torchvision 0.15.1+cu118
+<div align="center">
+  <img src="https://github.com/Xiang-Deng00/RAM-Avatar/blob/main/sample_results.png" width="800" alt="Sample Results"/>
+</div>
+
+## 📚 Abstract
+
+This paper advances the practicality of human avatar learning by introducing **RAM-Avatar**, a framework that learns real-time, photo-realistic avatars from monocular videos with full-body controllability. To model fine-grained variations in facial expressions and hand gestures, we employ dedicated statistical templates. For the body, a sparsely computed dual attention mechanism enhances texture fidelity on torso and limbs. Built upon this, a lightweight yet powerful **StyleUNet** architecture, coupled with a temporal-aware discriminator, enables efficient and realistic rendering at real-time speeds. To ensure robust animation under out-of-distribution poses, we propose a **Motion Distribution Alignment (MDA)** module that reduces domain shift between training and inference. Extensive experiments validate the superiority of our method in both qualitative and quantitative evaluations. We further demonstrate its practical potential via a real-time live avatar system. Code and models will be released for research purposes.
+
+<div align="center">
+  <img src="https://github.com/Xiang-Deng00/RAM-Avatar/blob/main/pipeline.png" width="800" alt="Method Pipeline"/>
+</div>
+
+---
+
+## ⚙️ Requirements
+
+```bash
+- Python 3.9.17
+- PyTorch 2.0.0+cu118
+- TorchVision 0.15.1+cu118
 - setuptools 68.0.0
 - scikit-image 0.22.0
 - numpy 1.25.2
-
-## Datasets
-
-
-1. Fit the Smpl-X parameters using ProxyCapV2. 
-2. Fit the Faceverse parameters using Faceverse.
-3. Render smpl and face maps using pytorch3d.
-4. Construct the data directory as following.
-
-dataset/train:
-
-    |dataset/train
-       |——keypoints_mmpose_hand
-          |——00000001.json
-          |——00000002.json
-          |——...
-       |——smpl_map
-          |——00000001.png
-          |——00000002.png
-          |——...
-       |——smpl_map_001
-          |——00000001.png
-          |——00000002.png
-          |——...
-       |——track2
-          |——00000001.png
-          |——00000002.png
-          |——...
-        |——00000001.png
-        |——00000002.png
-        |——...
-
-## Train
 ```
+
+> 💡 We recommend using a Conda environment:
+> ```bash
+> conda create -n ramavatar python=3.9
+> conda activate ramavatar
+> pip install torch==2.0.0+cu118 torchvision==0.15.1+cu118 torchaudio==2.0.0+cu118 --index-url https://download.pytorch.org/whl/cu118
+> pip install scikit-image numpy setuptools
+> ```
+
+---
+
+## 🗂️ Dataset Preparation
+
+To train RAM-Avatar, prepare your dataset as follows:
+
+1. **Estimate SMPL-X parameters** using [ProxyCapV2](https://github.com/eth-siplab/ProxyCap).
+2. **Fit FaceVerse parameters** for facial dynamics.
+3. **Render SMPL and facial maps** using [PyTorch3D](https://github.com/facebookresearch/pytorch3d).
+4. Organize the data directory structure:
+
+```
+dataset/train/
+├── keypoints_mmpose_hand/
+│   ├── 00000001.json
+│   ├── 00000002.json
+│   └── ...
+├── smpl_map/
+│   ├── 00000001.png
+│   ├── 00000002.png
+│   └── ...
+├── smpl_map_001/
+│   ├── 00000001.png
+│   ├── 00000002.png
+│   └── ...
+├── track2/
+│   ├── 00000001.png
+│   ├── 00000002.png
+│   └── ...
+├── 00000001.png          # Original frames
+├── 00000002.png
+└── ...
+```
+
+### 📦 Pretrained Checkpoints & Datasets
+
+You can download our pre-trained models and sample datasets here:
+
+- 🔗 **[Pretrained Checkpoints](https://pan.baidu.com/s/10l3gb6JEADHZBRMBMpAZjA?pwd=i8gt)** (Password: `i8gt`)  
+- 🔗 **[Sample Dataset](https://pan.baidu.com/s/1aSEAPZWV62Pc8CDvEZh1JA?pwd=e4wp)** (Password: `e4wp`)  
+*— Shared via Baidu Wangpan Super VIP*
+
+> ⚠️ Note: These links are hosted on Baidu Netdisk. International users may need a download accelerator.
+
+---
+
+## 🏃 Training
+
+Single GPU:
+```bash
+CUDA_VISIBLE_DEVICES=0 python main_train.py --from_json configs/train.json --name train --nump 0
+```
+
+Multi-GPU (4 GPUs):
+```bash
 CUDA_VISIBLE_DEVICES=0,1,2,3 python main_train.py --from_json configs/train.json --name train --nump 4
 ```
 
-## Test
+---
+
+## 🧪 Testing
+
+```bash
+CUDA_VISIBLE_DEVICES=0 python main_test.py --from_json configs/test.json --name train --nump 0
 ```
-CUDA_VISIBLE_DEVICES=0,1,2,3 python main_test.py --from_json configs/test.json --name train --nump 4
+
+---
+
+## 🙏 Acknowledgements
+
+This work is built upon the following excellent open-source projects. We thank the authors for their contributions:
+
+- [StyleAvatar](https://github.com/LizhenWangT/StyleAvatar)
+- [CCNet](https://github.com/speedinghzl/CCNet)
+
+---
+
+## 📎 Citation
+
+If you find our work useful in your research, please cite:
+
+```bibtex
+@inproceedings{deng2024ram,
+  title     = {RAM-Avatar: Real-Time Photo-Realistic Avatar from Monocular Videos with Full-Body Control},
+  author    = {Deng, Xiang and Zheng, Zerong and Zhang, Yuxiang and Sun, Jingxiang and Xu, Chao and Yang, Xiaodong and Wang, Lizhen and Liu, Yebin},
+  booktitle = {Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)},
+  pages     = {1996--2007},
+  year      = {2024}
+}
 ```
-## Acknowledgement 
-This code is built upon [Styleavatar](https://github.com/LizhenWangT/StyleAvatar) and [CCNet](https://github.com/speedinghzl/CCNet). Thanks to the authors of these open source codes. 
+
+---
+
+<div align="center">
+  <small>© 2025 RAM-Avatar Authors. This project is for academic purposes only.</small>
+</div>

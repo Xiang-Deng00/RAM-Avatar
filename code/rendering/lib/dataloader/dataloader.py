@@ -81,6 +81,10 @@ class Dataset(data.Dataset):
         subscr = 100
         smpl_map_fpath = os.path.join(smpl_params_folder, '%08d.png' % (frame_id - subscr))
         smpl_map_fpath2 = os.path.join(smpl_params_folder + '_001', '%08d.png' % (frame_id - subscr))
+        # print('smpl_params_fpath:{} smpl_params_folder:{}'.format(self.smpl_params_fpath, smpl_params_folder))
+        # print(smpl_map_fpath, smpl_map_fpath2)
+        # import pdb
+        # pdb.set_trace()
         smpl_map = cv.imread(smpl_map_fpath, cv.IMREAD_UNCHANGED)
         smpl_map = cv.copyMakeBorder(smpl_map, border, border, border, border, cv.BORDER_CONSTANT, value=0)
         smpl_map2 = cv.imread(smpl_map_fpath2, cv.IMREAD_UNCHANGED)

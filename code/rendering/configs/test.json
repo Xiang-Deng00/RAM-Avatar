@@ -1,0 +1,82 @@
+{
+    "time_to_run": Infinity,
+    "end_step": 200000,
+    "warm_up_end_step": 1000,
+    "resume": true,
+    "num_workers": 8,
+    "pin_memory": true,
+    "log_dir": "logs",
+    "checkpoint": null,
+    "pretrained_checkpoint": null,
+    "pretrained_smpl_param_ckpt_path": "../../dataset/test/smpl_map_smooth",
+    "range": [
+        [
+            100,
+            800
+        ],
+        [
+            1050,
+            1350
+        ],
+        [
+            1600,
+            1830
+        ],
+        [
+            3600,
+            3800
+        ],
+        [
+            4240,
+            4800
+        ],
+        [
+            5200,
+            5360
+        ],
+        [
+            5715,
+            5900
+        ]
+    ],
+    "key_range": [],
+    "dataset_module": "lib.dataloader.dataloader",
+    "dataset_module_test": "lib.dataloader.dataloader",
+    "subject_name": "test",
+    "dataset_dir": "../../dataset/test",
+    "video_path": "../../videos/test.mp4",
+    "cam_num": 1,
+    "cam_ids_to_use": [
+        0
+    ],
+    "point_num": null,
+    "first_frame": 105,
+    "last_frame": 1000,
+    "test_first_frame": 8000,
+    "test_last_frame": 11500,
+    "white_bkgd": true,
+    "leng": 1760,
+    "l1": 600,
+    "r1": 700,
+    "face": true,
+    "half_length": 186,
+    "crop_center": [1606, 1180],
+    "t_length": 2,
+    "triplane_res": 512,
+    "img_res": 1024,
+    "trainer_module": "trainer",
+    "num_epochs": 999999,
+    "batch_size": 1,
+    "test_batch_size": 1,
+    "summary_steps": 20,
+    "test_steps": 100,
+    "checkpoint_steps": 50000,
+    "shuffle_train": true,
+    "shuffle_test": false,
+    "adam_beta1": 0.9,
+    "lr": 0.002,
+    "wd": 0,
+    "debug": true,
+    "quiet": false,
+    "logfile": null
+}

@@ -38,6 +38,8 @@ class CrissCrossAttention(nn.Module):
         self.disweight = self.disweight.unsqueeze(0)
     
     def forward(self, x, y):
+        if x.dtype is torch.float16:
+            self.disweight = self.disweight.half()
         m_batchsize, _, height, width = x.size()
         proj_query = self.query_conv(y)
         proj_query_H = proj_query.permute(0,3,1,2).contiguous().view(m_batchsize*width,-1,height).permute(0, 2, 1)
@@ -49,6 +51,8 @@ class CrissCrossAttention(nn.Module):
         proj_value_H = proj_value.permute(0,3,1,2).contiguous().view(m_batchsize*width,-1,height)
         proj_value_W = proj_value.permute(0,2,1,3).contiguous().view(m_batchsize*height,-1,width)
         energy_H = (torch.bmm(proj_query_H, proj_key_H)+self.INF(m_batchsize, height, width)).view(m_batchsize,width,height,height).permute(0,2,1,3)
+        if x.dtype is torch.float16:
+            energy_H = energy_H.half()
         energy_W = torch.bmm(proj_query_W, proj_key_W).view(m_batchsize,height,width,width)
         energy_H = energy_H * self.disweight.detach()
         energy_W = energy_W * self.disweight.detach()
@@ -56,6 +60,8 @@ class CrissCrossAttention(nn.Module):
 
         att_H = concate[:,:,:,0:height].permute(0,2,1,3).contiguous().view(m_batchsize*width,height,height)
         att_W = concate[:,:,:,height:height+width].contiguous().view(m_batchsize*height,width,width)
+        # import pdb
+        # pdb.set_trace()
         out_H = torch.bmm(proj_value_H, att_H.permute(0, 2, 1)).view(m_batchsize,width,-1,height).permute(0,2,3,1)
         out_W = torch.bmm(proj_value_W, att_W.permute(0, 2, 1)).view(m_batchsize,height,-1,width).permute(0,2,1,3)
         return self.gamma*(out_H + out_W) + x

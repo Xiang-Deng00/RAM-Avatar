@@ -29,6 +29,7 @@ from torch.utils.data.distributed import DistributedSampler
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.distributed import init_process_group, destroy_process_group
 import os
+import time
 
 def ddp_setup(rank: int, world_size: int):
    """
@@ -282,6 +283,7 @@ class Trainer(BaseTrainer):
             requires_grad(self.style_code, True)
             requires_grad(self.triplane_conv, True)
             requires_grad(self.discriminator_t, False)
+        # cond = self.get_cond(input_batch[1])
         cond = self.triplane_conv(self.get_cond(input_batch[1]), self.get_cond(input_batch[0])) + self.triplane_conv(self.get_cond(input_batch[1]), self.get_cond2(input_batch[1]))
                
         
@@ -439,7 +441,9 @@ class Trainer(BaseTrainer):
         out_dir_rgb = os.path.join(self.options.log_dir, 'step_%d' % self.step_count, 'reconstruction_rgb')
         os.makedirs(out_dir_rgb, exist_ok=True)
         self.set_eval()
-
+        self.triplane = self.triplane.half()
+        self.triplane_conv = self.triplane_conv.half()
+        self.diffnet = self.diffnet.half()
         start_frame_id = 0 if start_frame_id is None else start_frame_id
         end_frame_id = self.test_ds.frame_num() if end_frame_id is None else end_frame_id
 
@@ -456,7 +460,7 @@ class Trainer(BaseTrainer):
             for i in range(self.train_ds.first_frame, self.train_ds.last_frame):
                 idx = torch.zeros(1).cuda() + i
                 idx = idx.long()
-                self.style_mean_list.append(self.style_code(idx))
+                self.style_mean_list.append(self.style_code(idx).half())
         self.style_mean = torch.stack(self.style_mean_list)
         self.style_mean = torch.mean(self.style_mean, dim=0)
         self.test_ds.random_crop = False
@@ -477,17 +481,23 @@ class Trainer(BaseTrainer):
                 if self.local_rank != 0:
                     return
             input_batch_list.append(input_batch)
+        import time
         for i in tqdm.trange(len(input_batch_list)):
             input_batch = input_batch_list[i]
             for i in range(len(input_batch)):
-                input_batch[i] = {k: v.to(self.device)
+                input_batch[i] = {k: v.half().to(self.device)
                             if isinstance(v, torch.Tensor) else v for k, v in input_batch[i].items()}
             bat_loc = len(input_batch) - 1
+            # import pdb
+            # pdb.set_trace()
             with torch.no_grad():
                 
                 #cond = self.get_cond(input_batch[0])
+                time_s = time.time()
                 cond = self.triplane_conv(self.get_cond(input_batch[1]), self.get_cond(input_batch[0])) + self.triplane_conv(self.get_cond(input_batch[1]), self.get_cond2(input_batch[1]))
                 img_pred = self.gen(input_batch[1], cond, idx)
+                time_e = time.time()
+                # print(time_e - time_s)
             
 
             img_fname = input_batch[bat_loc]['frame_fname'][0]
@@ -497,3 +507,93 @@ class Trainer(BaseTrainer):
             sample = sample.squeeze(0).permute(1, 2, 0).detach().cpu().numpy()
             sample = np.uint8(np.clip(sample*127.5+127.5, 0, 255))
             cv.imwrite(out_path_rgb, sample[:, :, ::-1])
+
+    def test_seq2(self, start_frame_id=None, end_frame_id=None, resume=False, cam_ids=None):
+        out_dir_rgb = os.path.join(self.options.log_dir, 'step_%d' % self.step_count, 'reconstruction_rgb')
+        os.makedirs(out_dir_rgb, exist_ok=True)
+        self.set_eval()
+        self.triplane = self.triplane.half()
+        self.triplane_conv = self.triplane_conv.half()
+        self.diffnet = self.diffnet.half()
+        start_frame_id = 0 if start_frame_id is None else start_frame_id
+        end_frame_id = self.test_ds.frame_num() if end_frame_id is None else end_frame_id
+
+        self.style_code_dim = 512
+        self.style_mean_list = []
+        test_data_loader = CheckpointDataLoader(self.test_ds,checkpoint=self.checkpoint,
+                                                     dataset_perm=self.dataset_perm,
+                                                     batch_size=self.options.batch_size,
+                                                     num_workers=self.options.num_workers,
+                                                     pin_memory=self.options.pin_memory,
+                                                     shuffle=False,
+                                                     distributed=self.options.distributed)
+        with torch.no_grad():
+            for i in range(self.train_ds.first_frame, self.train_ds.last_frame):
+                idx = torch.zeros(1).cuda() + i
+                idx = idx.long()
+                self.style_mean_list.append(self.style_code(idx).half())
+        self.style_mean = torch.stack(self.style_mean_list)
+        self.style_mean = torch.mean(self.style_mean, dim=0)
+        self.test_ds.random_crop = False
+        self.test_ds.training = False
+        
+        idx = torch.zeros(1).cuda().long()
+        self.style_code_no = self.style_mean
+        input_batch_list = []
+        for step, input_batch in enumerate(tqdm.tqdm(test_data_loader, desc='Load data from disk2',
+                                              total=len(self.train_ds) // self.options.batch_size,
+                                              initial=0,
+                                              ascii=True),
+                                         test_data_loader.checkpoint_batch_idx):
+            
+            if step % 1 != 0:
+                continue
+            if self.distributed:
+                if self.local_rank != 0:
+                    return
+            # input_batch_list.append(input_batch)
+            # input_batch = input_batch_list[i]
+            for i in range(len(input_batch)):
+                input_batch[i] = {k: v.half().to(self.device)
+                            if isinstance(v, torch.Tensor) else v for k, v in input_batch[i].items()}
+            bat_loc = len(input_batch) - 1
+            # import pdb
+            # pdb.set_trace()
+            with torch.no_grad():
+                
+                #cond = self.get_cond(input_batch[0])
+                time_s = time.time()
+                cond = self.triplane_conv(self.get_cond(input_batch[1]), self.get_cond(input_batch[0])) + self.triplane_conv(self.get_cond(input_batch[1]), self.get_cond2(input_batch[1]))
+                img_pred = self.gen(input_batch[1], cond, idx)
+                time_e = time.time()
+                print(time_e - time_s)
+            
+
+            img_fname = input_batch[bat_loc]['frame_fname'][0]
+            # import pdb
+            # pdb.set_trace()
+            img_gt = input_batch[bat_loc]['img']
+            smpl_map = input_batch[bat_loc]['smpl_map']
+            out_path_rgb = os.path.join(out_dir_rgb, img_fname)
+
+            sample = img_pred
+            sample = sample.squeeze(0).permute(1, 2, 0).detach().cpu().numpy()
+            sample = np.uint8(np.clip(sample*127.5+127.5, 0, 255))
+            img_gt = img_gt.squeeze(0).permute(1, 2, 0).detach().cpu().numpy()
+            img_gt = np.uint8(np.clip(img_gt*127.5+127.5, 0, 255))
+            smpl_map = smpl_map[0].permute(1, 2, 0).detach().cpu().numpy()
+            smpl_map[:, :, 1] -= 0.4
+            #smpl_map = (smpl_map / 255.0 - 0.5) / 0.3
+            smpl_map = (smpl_map * 0.3 + 0.5) * 255.0
+
+            skel_map = input_batch[bat_loc]['hand_skel_map'][0].permute(1, 2, 0).detach().cpu().numpy()
+            #smpl_map = (smpl_map / 255.0 - 0.5) / 0.3
+            skel_map = skel_map * 255.0
+            skel_map[...,2] += skel_map[...,3]
+            skel_map[...,2] += skel_map[...,4]
+            skel_map = skel_map[...,:3]
+            sample = np.concatenate([img_gt, sample, smpl_map, skel_map], axis=1)
+            cv.imwrite(out_path_rgb, sample[:, :, ::-1])
+        
+     
+            

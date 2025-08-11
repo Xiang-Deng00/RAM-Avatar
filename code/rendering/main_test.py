@@ -21,7 +21,7 @@ if __name__ == '__main__':
 
     trainer_module = __import__(opt.trainer_module, fromlist=['Trainer'])
     trainer = trainer_module.Trainer(opt)
-    trainer.test_seq(cam_ids=[0], start_frame_id=0)
+    trainer.test_seq2(cam_ids=[0], start_frame_id=0)
 
 
 

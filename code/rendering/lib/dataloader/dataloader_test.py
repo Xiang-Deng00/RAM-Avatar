@@ -70,9 +70,11 @@ class Dataset(data.Dataset):
             smpl_params_folder = self.smpl_params_fpath
         else:
             smpl_params_folder = os.path.dirname(self.smpl_params_fpath)
+        # print('smpl_params_fpath:', self.smpl_params_fpath, smpl_params_folder)
         subscr = 100
         smpl_map_fpath = os.path.join(smpl_params_folder, '%08d.png' % (frame_id - subscr))
         smpl_map_fpath2 = os.path.join(smpl_params_folder + '_001', '%08d.png' % (frame_id - subscr))
+        # print('smpl:', smpl_map_fpath, smpl_map_fpath2)
         smpl_map = cv.imread(smpl_map_fpath, cv.IMREAD_UNCHANGED)
         smpl_map = cv.copyMakeBorder(smpl_map, border, border, border, border, cv.BORDER_CONSTANT, value=0)
         smpl_map2 = cv.imread(smpl_map_fpath2, cv.IMREAD_UNCHANGED)
@@ -111,7 +113,7 @@ class Dataset(data.Dataset):
             smpl_map = smpl_map * smpl_map_msk
             smpl_map = np.float32(smpl_map)
 
-
+            
             smpl_map_msk2 = smpl_map2[:, :, -1:] / 255.0
             smpl_map2 = smpl_map2[:, :, :-1]
             smpl_map2 = (smpl_map2 / 255.0 - 0.5) / 0.3
